@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.9994899693981639,
+  "precision_macro": 0.9996787611260011,
+  "recall_macro": 0.9996027564380335,
+  "f1_macro": 0.999639551308365,
+  "precision_weighted": 0.9994923177952366,
+  "recall_weighted": 0.9994899693981639,
+  "f1_weighted": 0.9994898288696348,
+  "dataset": "gtsrb",
+  "model": "mobilenet_v3_small",
+  "best_epoch": 10,
+  "best_validation_accuracy": 0.9994898826730148,
+  "test_samples": 5882,
+  "training_seconds": 7141.62,
+  "device": "cpu",
+  "split_type": "random_stratified"
+}

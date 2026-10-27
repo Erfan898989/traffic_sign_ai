@@ -1,0 +1,4 @@
+index,true_label,predicted_label,confidence,image_path
+4530,Speed limit (50 km/h),Speed limit (120 km/h),0.463611,"data\GTSRB\Train\2\00002_00070_00000.png"
+30546,Traffic signals,General caution,0.762092,"data\GTSRB\Train\26\00026_00019_00006.png"
+1980,Speed limit (30 km/h),Speed limit (80 km/h),0.552089,"data\GTSRB\Train\1\00001_00059_00000.png"

@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.999659979598776,
+  "precision_macro": 0.9998132967579018,
+  "recall_macro": 0.9996475361530441,
+  "f1_macro": 0.9997294504211068,
+  "precision_weighted": 0.9996613444813686,
+  "recall_weighted": 0.999659979598776,
+  "f1_weighted": 0.9996596745367292,
+  "dataset": "gtsrb",
+  "model": "resnet18",
+  "best_epoch": 9,
+  "best_validation_accuracy": 0.9993198435640197,
+  "test_samples": 5882,
+  "training_seconds": 27868.29,
+  "device": "cpu",
+  "split_type": "random_stratified"
+}

@@ -1,0 +1,273 @@
+{
+  "Speed limit (20 km/h)": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 31.0
+  },
+  "Speed limit (30 km/h)": {
+    "precision": 1.0,
+    "recall": 0.996996996996997,
+    "f1-score": 0.9984962406015038,
+    "support": 333.0
+  },
+  "Speed limit (50 km/h)": {
+    "precision": 1.0,
+    "recall": 0.9970326409495549,
+    "f1-score": 0.9985141158989599,
+    "support": 337.0
+  },
+  "Speed limit (60 km/h)": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 211.0
+  },
+  "Speed limit (70 km/h)": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 297.0
+  },
+  "Speed limit (80 km/h)": {
+    "precision": 0.9964285714285714,
+    "recall": 1.0,
+    "f1-score": 0.998211091234347,
+    "support": 279.0
+  },
+  "End speed limit (80 km/h)": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 63.0
+  },
+  "Speed limit (100 km/h)": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 216.0
+  },
+  "Speed limit (120 km/h)": {
+    "precision": 0.9952830188679245,
+    "recall": 1.0,
+    "f1-score": 0.9976359338061466,
+    "support": 211.0
+  },
+  "No passing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 221.0
+  },
+  "No passing for vehicles over 3.5 t": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 301.0
+  },
+  "Right-of-way at next intersection": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 198.0
+  },
+  "Priority road": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 315.0
+  },
+  "Yield": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 324.0
+  },
+  "Stop": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 117.0
+  },
+  "No vehicles": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 95.0
+  },
+  "Vehicles over 3.5 t prohibited": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 63.0
+  },
+  "No entry": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 167.0
+  },
+  "General caution": {
+    "precision": 0.994475138121547,
+    "recall": 1.0,
+    "f1-score": 0.997229916897507,
+    "support": 180.0
+  },
+  "Dangerous curve left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 31.0
+  },
+  "Dangerous curve right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 54.0
+  },
+  "Double curve": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 49.0
+  },
+  "Bumpy road": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 59.0
+  },
+  "Slippery road": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 77.0
+  },
+  "Road narrows on the right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 41.0
+  },
+  "Road work": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 225.0
+  },
+  "Traffic signals": {
+    "precision": 1.0,
+    "recall": 0.9888888888888889,
+    "f1-score": 0.994413407821229,
+    "support": 90.0
+  },
+  "Pedestrians": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 36.0
+  },
+  "Children crossing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 81.0
+  },
+  "Bicycles crossing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 41.0
+  },
+  "Beware of ice/snow": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 67.0
+  },
+  "Wild animals crossing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 117.0
+  },
+  "End speed and passing limits": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 36.0
+  },
+  "Turn right ahead": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 104.0
+  },
+  "Turn left ahead": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 63.0
+  },
+  "Ahead only": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 180.0
+  },
+  "Straight or right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 59.0
+  },
+  "Straight or left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 31.0
+  },
+  "Keep right": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 311.0
+  },
+  "Keep left": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 45.0
+  },
+  "Roundabout mandatory": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 54.0
+  },
+  "End no passing": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 36.0
+  },
+  "End no passing for vehicles over 3.5 t": {
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1-score": 1.0,
+    "support": 36.0
+  },
+  "accuracy": 0.9994899693981639,
+  "macro avg": {
+    "precision": 0.9996787611260011,
+    "recall": 0.9996027564380335,
+    "f1-score": 0.999639551308365,
+    "support": 5882.0
+  },
+  "weighted avg": {
+    "precision": 0.9994923177952366,
+    "recall": 0.9994899693981639,
+    "f1-score": 0.9994898288696348,
+    "support": 5882.0
+  }
+}

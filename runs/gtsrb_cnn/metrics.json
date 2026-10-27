@@ -1,0 +1,17 @@
+{
+  "accuracy": 0.9988099285957157,
+  "precision_macro": 0.9992393076459831,
+  "recall_macro": 0.9988557500622547,
+  "f1_macro": 0.9990425514356828,
+  "precision_weighted": 0.9988167144771719,
+  "recall_weighted": 0.9988099285957157,
+  "f1_weighted": 0.998808758710429,
+  "dataset": "gtsrb",
+  "model": "cnn",
+  "best_epoch": 9,
+  "best_validation_accuracy": 0.9977894915830641,
+  "test_samples": 5882,
+  "training_seconds": 29989.58,
+  "device": "cpu",
+  "split_type": "random_stratified"
+}

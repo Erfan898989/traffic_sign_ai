@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.venv/
+data/
+
+# Large datasets and downloaded weights
+data/
+*.zip
+*.7z
+*.tar
+*.tar.gz# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.venv/
+
+# VS Code
+.vscode/
+
+# Dataset
+data/
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Model checkpoints and experiment outputs
+*.pt
+*.onnx
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+New folder/

@@ -1,0 +1,8 @@
+index,true_label,predicted_label,confidence,image_path
+599,Speed limit (30 km/h),Speed limit (120 km/h),0.309754,"data\GTSRB\Train\1\00001_00012_00029.png"
+1233,Speed limit (30 km/h),Speed limit (80 km/h),0.350079,"data\GTSRB\Train\1\00001_00034_00003.png"
+23430,No vehicles,Yield,0.274518,"data\GTSRB\Train\15\00015_00013_00000.png"
+27090,Double curve,Wild animals crossing,0.594547,"data\GTSRB\Train\21\00021_00004_00000.png"
+10710,Speed limit (100 km/h),Speed limit (80 km/h),0.699276,"data\GTSRB\Train\7\00007_00012_00000.png"
+10715,Speed limit (100 km/h),Speed limit (120 km/h),0.672305,"data\GTSRB\Train\7\00007_00012_00005.png"
+657,Speed limit (30 km/h),Speed limit (100 km/h),0.279062,"data\GTSRB\Train\1\00001_00014_00027.png"
