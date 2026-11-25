@@ -25,11 +25,10 @@
 from pathlib import Path
 
 import av
-import cv2
 import numpy as np
 import streamlit as st
 import torch
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from streamlit_webrtc import RTCConfiguration, VideoProcessorBase, webrtc_streamer
 from torchvision import transforms
 from ultralytics import YOLO
@@ -262,16 +261,25 @@ else:
 
     class LiveSignDetector(VideoProcessorBase):
         def recv(self, frame):
-            img = frame.to_ndarray(format="bgr24")
-            boxes = detect_sign_boxes(detector, img)
-            for (x1, y1, x2, y2, label, confidence) in boxes:
-                cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                text = f"{label} {confidence * 100:.0f}%"
-                cv2.putText(
-                    img, text, (x1, max(y1 - 10, 20)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2,
+            # RGB frame -> draw with PIL (no cv2: Streamlit Cloud has no
+            # libGL, so plain opencv-python cannot import there).
+            img = Image.fromarray(frame.to_ndarray(format="rgb24"))
+            draw = ImageDraw.Draw(img)
+            try:
+                font = ImageFont.truetype(
+                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22
                 )
-            return av.VideoFrame.from_ndarray(img, format="bgr24")
+            except Exception:
+                font = ImageFont.load_default()
+            boxes = detect_sign_boxes(detector, np.array(img))
+            for (x1, y1, x2, y2, label, confidence) in boxes:
+                draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0), width=3)
+                draw.text(
+                    (x1, max(y1 - 26, 0)),
+                    f"{label} {confidence * 100:.0f}%",
+                    fill=(255, 0, 0), font=font,
+                )
+            return av.VideoFrame.from_ndarray(np.array(img), format="rgb24")
 
     webrtc_streamer(
         key="live-signs",
