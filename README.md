@@ -430,3 +430,55 @@ The workflow covered:
 Three architectures were evaluated, and **ResNet18 achieved the best overall performance with 99.97% test accuracy and a 99.97% F1-score**.
 
 Therefore, ResNet18 was selected as the final model for the project.
+---
+# 🚦 Complete List of the 43 GTSRB Classes
+
+The trained classifier recognizes 43 traffic-sign categories from the GTSRB dataset. Class IDs follow the official GTSRB label order.
+
+| Class ID | English Label | Persian Translation |
+|---:|---|---|
+| 0 | Speed limit (20 km/h) | محدودیت سرعت ۲۰ کیلومتر بر ساعت |
+| 1 | Speed limit (30 km/h) | محدودیت سرعت ۳۰ کیلومتر بر ساعت |
+| 2 | Speed limit (50 km/h) | محدودیت سرعت ۵۰ کیلومتر بر ساعت |
+| 3 | Speed limit (60 km/h) | محدودیت سرعت ۶۰ کیلومتر بر ساعت |
+| 4 | Speed limit (70 km/h) | محدودیت سرعت ۷۰ کیلومتر بر ساعت |
+| 5 | Speed limit (80 km/h) | محدودیت سرعت ۸۰ کیلومتر بر ساعت |
+| 6 | End of speed limit (80 km/h) | پایان محدودیت سرعت ۸۰ کیلومتر بر ساعت |
+| 7 | Speed limit (100 km/h) | محدودیت سرعت ۱۰۰ کیلومتر بر ساعت |
+| 8 | Speed limit (120 km/h) | محدودیت سرعت ۱۲۰ کیلومتر بر ساعت |
+| 9 | No passing | سبقت ممنوع |
+| 10 | No passing for vehicles over 3.5 t | سبقت ممنوع برای وسایل نقلیه بالای ۳٫۵ تن |
+| 11 | Right-of-way at next intersection | حق تقدم در تقاطع بعدی |
+| 12 | Priority road | جاده دارای حق تقدم |
+| 13 | Yield | رعایت حق تقدم |
+| 14 | Stop | ایست |
+| 15 | No vehicles | عبور وسایل نقلیه ممنوع |
+| 16 | Vehicles over 3.5 t prohibited | عبور وسایل نقلیه بالای ۳٫۵ تن ممنوع |
+| 17 | No entry | ورود ممنوع |
+| 18 | General caution | هشدار خطر عمومی |
+| 19 | Dangerous curve left | پیچ خطرناک به چپ |
+| 20 | Dangerous curve right | پیچ خطرناک به راست |
+| 21 | Double curve | پیچ‌های پی‌درپی |
+| 22 | Bumpy road | جاده ناهموار |
+| 23 | Slippery road | جاده لغزنده |
+| 24 | Road narrows on the right | باریک شدن جاده از سمت راست |
+| 25 | Road work | عملیات راه‌سازی |
+| 26 | Traffic signals | هشدار وجود چراغ راهنمایی در جلو |
+| 27 | Pedestrians | عبور عابران پیاده |
+| 28 | Children crossing | عبور کودکان |
+| 29 | Bicycles crossing | عبور دوچرخه |
+| 30 | Beware of ice/snow | خطر یخ‌زدگی و برف |
+| 31 | Wild animals crossing | عبور حیوانات وحشی |
+| 32 | End of speed and passing limits | پایان محدودیت‌های سرعت و سبقت |
+| 33 | Turn right ahead | گردش به راست در جلو |
+| 34 | Turn left ahead | گردش به چپ در جلو |
+| 35 | Ahead only | فقط مستقیم |
+| 36 | Straight or right | مستقیم یا راست |
+| 37 | Straight or left | مستقیم یا چپ |
+| 38 | Keep right | عبور از سمت راست |
+| 39 | Keep left | عبور از سمت چپ |
+| 40 | Roundabout mandatory | میدان اجباری |
+| 41 | End of no passing | پایان سبقت ممنوع |
+| 42 | End of no passing for vehicles over 3.5 t | پایان ممنوعیت سبقت برای وسایل نقلیه بالای ۳٫۵ تن |
+
+> **Important clarification:** Class 26 (Traffic signals) represents a warning sign indicating traffic signals ahead. It does not identify whether a traffic light is red, yellow, or green. The current GTSRB model is a 43-class traffic-sign classifier. Traffic-light color recognition is a separate task and is not included in this model.
