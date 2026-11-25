@@ -2,13 +2,10 @@
 # Live camera page for the traffic-sign app (multipage: put this file in
 # pages/1_camera_live.py next to streamlit_app.py).
 #
-# Two modes:
-#   1. "عکس با دوربین" — live preview, tap "عکس بگیر", YOLO finds
-#      sign-like regions, the ResNet18 classifier labels EACH one
-#      (all 43 classes), boxes are numbered and the Persian names are
-#      listed below.
-#   2. "ویدیوی زنده" — live video with YOLO detecting stop signs and
-#      drawing a box + label in real time.
+# Single mode: "عکس با دوربین" — live preview, tap "عکس بگیر", YOLO finds
+# sign-like regions, the ResNet18 classifier labels EACH one
+# (all 43 classes), boxes are numbered and the Persian names are
+# listed below. There is NO live-video mode in this version.
 #
 # Camera switch: both modes use streamlit-webrtc with a facingMode
 # constraint, so the user can pick front (جلو / selfie) or back
@@ -245,12 +242,6 @@ camera_choice = st.radio(
 facing_mode = "environment" if camera_choice.startswith("📷") else "user"
 video_constraints = {"video": {"facingMode": facing_mode}, "audio": False}
 
-mode = st.radio(
-    "حالت",
-    ["📷 عکس با دوربین", "🎥 ویدیوی زنده"],
-    horizontal=True,
-)
-
 try:
     classifier, class_names, transform = load_classifier()
     detector = load_detector()
@@ -259,102 +250,35 @@ except Exception as error:
     st.code(str(error))
     st.stop()
 
+st.write(
+    "پیش‌نمایش دوربین رو ببین، بعد «عکس بگیر» رو بزن؛ مدل دور هر "
+    "تابلو خط می‌کشه و زیر عکس می‌نویسه هر کدوم چیه."
+)
 
-# =========================================================
-# حالت ۱: عکس با دوربین (پیش‌نمایش زنده + دکمه عکس)
-# =========================================================
 
-if mode == "📷 عکس با دوربین":
-    st.write(
-        "پیش‌نمایش دوربین رو ببین، بعد «عکس بگیر» رو بزن؛ مدل دور هر "
-        "تابلو خط می‌کشه و زیر عکس می‌نویسه هر کدوم چیه."
-    )
+class PhotoCapture(VideoProcessorBase):
+    def __init__(self):
+        self.last_frame = None
 
-    class PhotoCapture(VideoProcessorBase):
-        def __init__(self):
-            self.last_frame = None
+    def recv(self, frame):
+        img = frame.to_ndarray(format="rgb24")
+        self.last_frame = img.copy()
+        return av.VideoFrame.from_ndarray(img, format="rgb24")
 
-        def recv(self, frame):
-            img = frame.to_ndarray(format="rgb24")
-            self.last_frame = img.copy()
-            return av.VideoFrame.from_ndarray(img, format="rgb24")
 
-    ctx = webrtc_streamer(
-        key="photo-capture",
-        video_processor_factory=PhotoCapture,
-        rtc_configuration=RTC_CONFIG,
-        media_stream_constraints=video_constraints,
-    )
+ctx = webrtc_streamer(
+    key="photo-capture",
+    video_processor_factory=PhotoCapture,
+    rtc_configuration=RTC_CONFIG,
+    media_stream_constraints=video_constraints,
+)
 
-    if st.button("📸 عکس بگیر"):
-        if ctx.video_processor is None or ctx.video_processor.last_frame is None:
-            st.warning(
-                "هنوز تصویری از دوربین نرسیده — چند ثانیه صبر کن تا "
-                "پیش‌نمایش بیاد، بعد دوباره بزن."
-            )
-        else:
-            image = Image.fromarray(ctx.video_processor.last_frame)
-            process_photo(image, detector, classifier, class_names, transform)
-
-# =========================================================
-# حالت ۲: ویدیوی زنده
-# =========================================================
-
-else:
-    st.write(
-        "ویدیوی زنده: دور تابلوهای ایست خط قرمز می‌کشه و می‌نویسه «ایست». "
-        "برای تشخیص زنده هر ۴۳ کلاس، قدم بعدی فاین‌تیون YOLO روی "
-        "دیتاست تشخیص علائم (GTSDB) است."
-    )
-
-    class LiveSignDetector(VideoProcessorBase):
-        def __init__(self):
-            self.frame_count = 0
-            self.last_boxes = []
-
-        def recv(self, frame):
-            # RGB frame -> draw with PIL (no cv2: Streamlit Cloud has no
-            # libGL, so plain opencv-python cannot import there).
-            img = Image.fromarray(frame.to_ndarray(format="rgb24"))
-            self.frame_count += 1
-
-            # YOLO on every frame is too slow on Streamlit Cloud CPU and
-            # makes the video freeze: run detection every 3rd frame on a
-            # small copy, and reuse the last boxes on the frames in between.
-            if self.frame_count % 3 == 1:
-                small = img.copy()
-                small.thumbnail((416, 416))
-                scale_x = img.width / small.width
-                scale_y = img.height / small.height
-                boxes = detect_sign_boxes(detector, np.array(small))
-                self.last_boxes = [
-                    (
-                        int(x1 * scale_x), int(y1 * scale_y),
-                        int(x2 * scale_x), int(y2 * scale_y),
-                        label, confidence,
-                    )
-                    for (x1, y1, x2, y2, label, confidence) in boxes
-                ]
-
-            draw = ImageDraw.Draw(img)
-            try:
-                font = ImageFont.truetype(
-                    "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 22
-                )
-            except Exception:
-                font = ImageFont.load_default()
-            for (x1, y1, x2, y2, label, confidence) in self.last_boxes:
-                draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0), width=3)
-                draw.text(
-                    (x1, max(y1 - 26, 0)),
-                    f"{label} {confidence * 100:.0f}%",
-                    fill=(255, 0, 0), font=font,
-                )
-            return av.VideoFrame.from_ndarray(np.array(img), format="rgb24")
-
-    webrtc_streamer(
-        key="live-signs",
-        video_processor_factory=LiveSignDetector,
-        rtc_configuration=RTC_CONFIG,
-        media_stream_constraints=video_constraints,
-    )
+if st.button("📸 عکس بگیر"):
+    if ctx.video_processor is None or ctx.video_processor.last_frame is None:
+        st.warning(
+            "هنوز تصویری از دوربین نرسیده — چند ثانیه صبر کن تا "
+            "پیش‌نمایش بیاد، بعد دوباره بزن."
+        )
+    else:
+        image = Image.fromarray(ctx.video_processor.last_frame)
+        process_photo(image, detector, classifier, class_names, transform)
