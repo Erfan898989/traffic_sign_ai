@@ -3,11 +3,17 @@
 # pages/1_camera_live.py next to streamlit_app.py).
 #
 # Two modes:
-#   1. "عکس با دوربین" — take a photo, YOLO finds sign-like regions,
-#      the ResNet18 classifier labels EACH one (all 43 classes), boxes
-#      are numbered and the Persian names are listed below.
+#   1. "عکس با دوربین" — live preview, tap "عکس بگیر", YOLO finds
+#      sign-like regions, the ResNet18 classifier labels EACH one
+#      (all 43 classes), boxes are numbered and the Persian names are
+#      listed below.
 #   2. "ویدیوی زنده" — live video with YOLO detecting stop signs and
 #      drawing a box + label in real time.
+#
+# Camera switch: both modes use streamlit-webrtc with a facingMode
+# constraint, so the user can pick front (جلو / selfie) or back
+# (عقب / environment) camera. st.camera_input cannot do this — it
+# always opens the default camera with no switch control.
 #
 # How it works: the ResNet18 model is a CLASSIFIER (it labels one cropped
 # image). Finding WHERE the signs are in a photo is a different job —
@@ -18,8 +24,14 @@
 # needs YOLO fine-tuned on traffic-sign detection data (GTSDB) — that is
 # the natural next step after this page works.
 #
+# Drawing is done with PIL, not cv2: Streamlit Cloud has no libGL, so
+# plain opencv-python cannot import there. requirements.txt must include
+# opencv-python-headless (after ultralytics) so ultralytics' own cv2
+# import works headless.
+#
 # New dependencies (add to requirements.txt):
 #   ultralytics
+#   opencv-python-headless
 #   streamlit-webrtc
 
 from pathlib import Path
@@ -52,6 +64,10 @@ st.caption(
 
 MODEL_PATH = Path("runs/gtsrb_resnet18/best_model.pth")
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+RTC_CONFIG = RTCConfiguration(
+    {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
+)
 
 # YOLO (COCO) class ids that look like traffic signs.
 YOLO_SIGN_CLASSES = {
@@ -179,9 +195,55 @@ def detect_sign_boxes(detector, image_np, conf_threshold=0.5):
     return boxes
 
 
+def process_photo(image, detector, classifier, class_names, transform):
+    """Detect all signs in a photo, classify each, show numbered boxes."""
+    image_np = np.array(image)
+
+    with st.spinner("در حال تشخیص..."):
+        boxes = detect_sign_boxes(detector, image_np)
+
+    if not boxes:
+        st.warning(
+            "تابلوای پیدا نشد — دوربین رو نزدیک‌تر بگیر یا مطمئن شو "
+            "تابلو توی کادره."
+        )
+        st.image(image, caption="تصویر ورودی", width="stretch")
+        return
+
+    annotated = image.copy()
+    draw = ImageDraw.Draw(annotated)
+    for number, (x1, y1, x2, y2, _label, _conf) in enumerate(boxes, start=1):
+        draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0), width=4)
+        draw.ellipse(
+            [x1 - 14, y1 - 14, x1 + 14, y1 + 14],
+            fill=(255, 0, 0),
+        )
+        draw.text((x1, y1), str(number), fill=(255, 255, 255))
+
+    st.image(annotated, caption="تابلوهای پیدا شده", width="stretch")
+
+    st.divider()
+    st.subheader("🎯 نتیجه‌ها")
+    for number, (x1, y1, x2, y2, _label, _conf) in enumerate(boxes, start=1):
+        crop = image.crop((x1, y1, x2, y2))
+        english, persian, confidence = classify_crop(
+            classifier, crop, transform, class_names
+        )
+        st.write(f"**{number}. {english}**")
+        st.caption(f"{persian} — {confidence * 100:.2f}%")
+
+
 # =========================================================
-# انتخاب حالت
+# انتخاب دوربین و حالت
 # =========================================================
+
+camera_choice = st.radio(
+    "دوربین",
+    ["📷 دوربین عقب (برای عکس از تابلو)", "🤳 دوربین جلو (سلفی)"],
+    horizontal=True,
+)
+facing_mode = "environment" if camera_choice.startswith("📷") else "user"
+video_constraints = {"video": {"facingMode": facing_mode}, "audio": False}
 
 mode = st.radio(
     "حالت",
@@ -199,54 +261,40 @@ except Exception as error:
 
 
 # =========================================================
-# حالت ۱: عکس با دوربین
+# حالت ۱: عکس با دوربین (پیش‌نمایش زنده + دکمه عکس)
 # =========================================================
 
 if mode == "📷 عکس با دوربین":
     st.write(
-        "با دوربین عکس بگیر؛ مدل دور هر تابلو خط می‌کشه و زیر عکس "
-        "می‌نویسه هر کدوم چیه."
+        "پیش‌نمایش دوربین رو ببین، بعد «عکس بگیر» رو بزن؛ مدل دور هر "
+        "تابلو خط می‌کشه و زیر عکس می‌نویسه هر کدوم چیه."
     )
 
-    photo = st.camera_input("📷 عکس بگیر")
+    class PhotoCapture(VideoProcessorBase):
+        def __init__(self):
+            self.last_frame = None
 
-    if photo is not None:
-        image = Image.open(photo).convert("RGB")
-        image_np = np.array(image)
+        def recv(self, frame):
+            img = frame.to_ndarray(format="rgb24")
+            self.last_frame = img.copy()
+            return av.VideoFrame.from_ndarray(img, format="rgb24")
 
-        with st.spinner("در حال تشخیص..."):
-            boxes = detect_sign_boxes(detector, image_np)
+    ctx = webrtc_streamer(
+        key="photo-capture",
+        video_processor_factory=PhotoCapture,
+        rtc_configuration=RTC_CONFIG,
+        media_stream_constraints=video_constraints,
+    )
 
-        if not boxes:
+    if st.button("📸 عکس بگیر"):
+        if ctx.video_processor is None or ctx.video_processor.last_frame is None:
             st.warning(
-                "تابلوای پیدا نشد — دوربین رو نزدیک‌تر بگیر یا مطمئن شو "
-                "تابلو توی کادره."
+                "هنوز تصویری از دوربین نرسیده — چند ثانیه صبر کن تا "
+                "پیش‌نمایش بیاد، بعد دوباره بزن."
             )
-            st.image(image, caption="تصویر ورودی", width="stretch")
         else:
-            # Draw numbered boxes on a copy of the photo.
-            annotated = image.copy()
-            draw = ImageDraw.Draw(annotated)
-            for number, (x1, y1, x2, y2, _label, _conf) in enumerate(boxes, start=1):
-                draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0), width=4)
-                draw.ellipse(
-                    [x1 - 14, y1 - 14, x1 + 14, y1 + 14],
-                    fill=(255, 0, 0),
-                )
-                draw.text((x1, y1), str(number), fill=(255, 255, 255))
-
-            st.image(annotated, caption="تابلوهای پیدا شده", width="stretch")
-
-            # Classify EACH box with ResNet18 and list the results.
-            st.divider()
-            st.subheader("🎯 نتیجه‌ها")
-            for number, (x1, y1, x2, y2, _label, _conf) in enumerate(boxes, start=1):
-                crop = image.crop((x1, y1, x2, y2))
-                english, persian, confidence = classify_crop(
-                    classifier, crop, transform, class_names
-                )
-                st.write(f"**{number}. {english}**")
-                st.caption(f"{persian} — {confidence * 100:.2f}%")
+            image = Image.fromarray(ctx.video_processor.last_frame)
+            process_photo(image, detector, classifier, class_names, transform)
 
 # =========================================================
 # حالت ۲: ویدیوی زنده
@@ -260,10 +308,34 @@ else:
     )
 
     class LiveSignDetector(VideoProcessorBase):
+        def __init__(self):
+            self.frame_count = 0
+            self.last_boxes = []
+
         def recv(self, frame):
             # RGB frame -> draw with PIL (no cv2: Streamlit Cloud has no
             # libGL, so plain opencv-python cannot import there).
             img = Image.fromarray(frame.to_ndarray(format="rgb24"))
+            self.frame_count += 1
+
+            # YOLO on every frame is too slow on Streamlit Cloud CPU and
+            # makes the video freeze: run detection every 3rd frame on a
+            # small copy, and reuse the last boxes on the frames in between.
+            if self.frame_count % 3 == 1:
+                small = img.copy()
+                small.thumbnail((416, 416))
+                scale_x = img.width / small.width
+                scale_y = img.height / small.height
+                boxes = detect_sign_boxes(detector, np.array(small))
+                self.last_boxes = [
+                    (
+                        int(x1 * scale_x), int(y1 * scale_y),
+                        int(x2 * scale_x), int(y2 * scale_y),
+                        label, confidence,
+                    )
+                    for (x1, y1, x2, y2, label, confidence) in boxes
+                ]
+
             draw = ImageDraw.Draw(img)
             try:
                 font = ImageFont.truetype(
@@ -271,8 +343,7 @@ else:
                 )
             except Exception:
                 font = ImageFont.load_default()
-            boxes = detect_sign_boxes(detector, np.array(img))
-            for (x1, y1, x2, y2, label, confidence) in boxes:
+            for (x1, y1, x2, y2, label, confidence) in self.last_boxes:
                 draw.rectangle([x1, y1, x2, y2], outline=(255, 0, 0), width=3)
                 draw.text(
                     (x1, max(y1 - 26, 0)),
@@ -284,8 +355,6 @@ else:
     webrtc_streamer(
         key="live-signs",
         video_processor_factory=LiveSignDetector,
-        rtc_configuration=RTCConfiguration(
-            {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}]}
-        ),
-        media_stream_constraints={"video": True, "audio": False},
+        rtc_configuration=RTC_CONFIG,
+        media_stream_constraints=video_constraints,
     )
