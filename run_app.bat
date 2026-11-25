@@ -2,7 +2,7 @@
 cd /d "%~dp0"
 
 echo ========================================
-echo       CAT vs DOG AI
+echo       Traffic Sign Ai
 echo ========================================
 echo.
 echo Starting application...
