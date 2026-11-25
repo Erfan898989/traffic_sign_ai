@@ -1,9 +1,11 @@
 from pathlib import Path
 
+import numpy as np
 import streamlit as st
 import torch
-from PIL import Image
+from PIL import Image, ImageDraw
 from torchvision import transforms
+from ultralytics import YOLO
 
 from traffic_ai.models import build_model
 
@@ -197,6 +199,48 @@ def load_model():
 
 
 # =========================================================
+# تشخیص جای تابلوها با YOLO
+# =========================================================
+# ResNet18 فقط «طبقه‌بندی» می‌کنه (یه عکس برش‌خورده چیه؟).
+# پیدا کردن جای تابلوها توی عکس، کار «تشخیص شیء» است و
+# با YOLOv8n انجام می‌شه. YOLO آماده (COCO) فقط «ایست» و
+# «چراغ راهنمایی» رو به‌عنوان تابلو می‌شناسه؛ برای اینکه
+# هر ۴۳ کلاس رو توی عکس پیدا کنه، قدم بعدی فاین‌تیون YOLO
+# روی دیتاست تشخیص علائم (GTSDB) است.
+
+# YOLO (COCO) class ids that look like traffic signs.
+YOLO_SIGN_CLASSES = {
+    9: "Traffic light",
+    11: "Stop",
+}
+
+
+@st.cache_resource
+def load_detector():
+    """YOLOv8n (COCO weights, ~6 MB, downloaded on first run)."""
+    return YOLO("yolov8n.pt")
+
+
+def detect_sign_boxes(detector, image_np, conf_threshold=0.5):
+    """Run YOLO and return boxes for sign-like objects.
+
+    Returns a list of (x1, y1, x2, y2, yolo_label, confidence).
+    """
+    results = detector(image_np, verbose=False)[0]
+    boxes = []
+    for box in results.boxes:
+        class_id = int(box.cls[0].item())
+        if class_id not in YOLO_SIGN_CLASSES:
+            continue
+        confidence = float(box.conf[0].item())
+        if confidence < conf_threshold:
+            continue
+        x1, y1, x2, y2 = (int(v) for v in box.xyxy[0].tolist())
+        boxes.append((x1, y1, x2, y2, YOLO_SIGN_CLASSES[class_id], confidence))
+    return boxes
+
+
+# =========================================================
 # پیش‌بینی
 # =========================================================
 
@@ -258,7 +302,7 @@ st.title(
 )
 
 st.caption(
-    "مدل: ResNet18 — GTSRB"
+    "مدل: ResNet18 — GTSRB | اگه چند تا تابلو توی عکس باشه، همه رو پیدا می‌کنه"
 )
 
 
@@ -287,6 +331,13 @@ except Exception as error:
 
     st.stop()
 
+# YOLO جدا لود می‌شه؛ اگه لود نشد، اپ با طبقه‌بندی کل عکس
+# (مثل قبل) کار می‌کنه.
+try:
+    detector = load_detector()
+except Exception:
+    detector = None
+
 
 # =========================================================
 # Upload
@@ -303,21 +354,8 @@ uploaded_file = st.file_uploader(
 )
 
 
-if uploaded_file is not None:
-
-    image = Image.open(
-        uploaded_file
-    ).convert("RGB")
-
-    st.image(
-        image,
-        caption="تصویر ورودی",
-        width="stretch",
-    )
-
-    # =====================================================
-    # Prediction
-    # =====================================================
+def show_single_prediction(image):
+    """Classify one (cropped) sign image and show result + top 3."""
 
     with st.spinner(
         "در حال تشخیص..."
@@ -402,3 +440,122 @@ if uploaded_file is not None:
             f"{persian} — "
             f"{value * 100:.2f}%"
         )
+
+
+if uploaded_file is not None:
+
+    image = Image.open(
+        uploaded_file
+    ).convert("RGB")
+
+    st.image(
+        image,
+        caption="تصویر ورودی",
+        width="stretch",
+    )
+
+    # =====================================================
+    # چند تابلو؟ — اول با YOLO جای تابلوها رو پیدا کن،
+    # بعد هر کدوم رو با ResNet18 طبقه‌بندی کن.
+    # =====================================================
+
+    boxes = []
+
+    if detector is not None:
+        with st.spinner(
+            "در حال پیدا کردن تابلوها..."
+        ):
+            boxes = detect_sign_boxes(
+                detector,
+                np.array(image),
+            )
+
+    if boxes:
+        # دور هر تابلو یه کادر شماره‌دار بکش
+        annotated = image.copy()
+        draw = ImageDraw.Draw(annotated)
+
+        for number, (
+            x1,
+            y1,
+            x2,
+            y2,
+            _label,
+            _conf,
+        ) in enumerate(boxes, start=1):
+
+            draw.rectangle(
+                [x1, y1, x2, y2],
+                outline=(255, 0, 0),
+                width=4,
+            )
+
+            draw.ellipse(
+                [x1 - 14, y1 - 14, x1 + 14, y1 + 14],
+                fill=(255, 0, 0),
+            )
+
+            draw.text(
+                (x1, y1),
+                str(number),
+                fill=(255, 255, 255),
+            )
+
+        st.image(
+            annotated,
+            caption=f"تابلوهای پیدا شده: {len(boxes)}",
+            width="stretch",
+        )
+
+        if len(boxes) == 1:
+            # یه تابلو — مثل قبل: نتیجه + سه پیش‌بینی برتر
+            (x1, y1, x2, y2, _label, _conf) = boxes[0]
+            crop = image.crop((x1, y1, x2, y2))
+            show_single_prediction(crop)
+        else:
+            # چند تابلو — هر کدوم چیه؟
+            st.divider()
+
+            st.subheader(
+                f"🎯 نتیجه‌ها — {len(boxes)} تابلو"
+            )
+
+            for number, (
+                x1,
+                y1,
+                x2,
+                y2,
+                _label,
+                _conf,
+            ) in enumerate(boxes, start=1):
+
+                crop = image.crop((x1, y1, x2, y2))
+
+                (
+                    english_name,
+                    persian_name,
+                    confidence,
+                    _probabilities,
+                ) = predict(
+                    model,
+                    crop,
+                    transform,
+                    class_names,
+                )
+
+                st.write(
+                    f"**{number}. {english_name}**"
+                )
+
+                st.caption(
+                    f"{persian_name} — "
+                    f"{confidence * 100:.2f}%"
+                )
+
+    else:
+        # هیچ کادری پیدا نشد — کل عکس رو مثل قبل طبقه‌بندی کن
+        st.caption(
+            "کادر تابلو پیدا نشد؛ کل عکس طبقه‌بندی شد."
+        )
+
+        show_single_prediction(image)
