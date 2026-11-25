@@ -234,14 +234,6 @@ def process_photo(image, detector, classifier, class_names, transform):
 # انتخاب دوربین و حالت
 # =========================================================
 
-camera_choice = st.radio(
-    "دوربین",
-    ["📷 دوربین عقب (برای عکس از تابلو)", "🤳 دوربین جلو (سلفی)"],
-    horizontal=True,
-)
-facing_mode = "environment" if camera_choice.startswith("📷") else "user"
-video_constraints = {"video": {"facingMode": facing_mode}, "audio": False}
-
 try:
     classifier, class_names, transform = load_classifier()
     detector = load_detector()
